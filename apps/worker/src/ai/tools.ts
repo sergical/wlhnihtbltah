@@ -191,14 +191,40 @@ export function buildAgentTools(env: Env) {
 
     findKeyMoments: tool({
       description:
-        "Given a Mux asset ID (from a previous watchVideo call), re-run the find-key-moments Robots job. Use only if the user asks for highlights or specific timestamps.",
+        "Given a Mux asset ID (from a previous watchVideo result), run Mux Robots find-key-moments and return the structured key moments (with timestamps + descriptions). Waits for the job to complete before returning. Use when the user asks for highlights or specific timestamps.",
       inputSchema: z.object({ muxAssetId: z.string() }),
       execute: async ({ muxAssetId }) => {
-        const res = await muxFetch("/robots/v0/jobs/find-key-moments", {
-          method: "POST",
-          body: JSON.stringify({ parameters: { asset_id: muxAssetId } }),
-        });
-        return res.json();
+        try {
+          const createRes = await muxFetch("/robots/v0/jobs/find-key-moments", {
+            method: "POST",
+            body: JSON.stringify({ parameters: { asset_id: muxAssetId } }),
+          });
+          if (!createRes.ok) {
+            return {
+              ok: false,
+              error: `mux robots create failed: ${createRes.status} ${await createRes.text()}`,
+            };
+          }
+          const created: any = await createRes.json();
+          const jobId = created?.data?.id;
+          const done = await pollJob(muxFetch, "find-key-moments", jobId, 120_000);
+          if (!done) {
+            return {
+              ok: false,
+              error: "find-key-moments job did not complete in time",
+            };
+          }
+          if (done.status === "errored") {
+            return { ok: false, error: "find-key-moments errored", raw: done };
+          }
+          return {
+            ok: true,
+            muxAssetId,
+            moments: done.outputs?.moments ?? [],
+          };
+        } catch (err) {
+          return { ok: false, error: String(err) };
+        }
       },
     }),
   };
