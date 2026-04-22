@@ -1,0 +1,14 @@
+node_modules
+dist
+.wrangler
+.dev.vars
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.turbo
+.vite
+/tmp
+visualizers.mp4
+visualizers/

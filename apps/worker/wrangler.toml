@@ -1,0 +1,39 @@
+name = "wlhnihtbltah"
+main = "src/index.ts"
+account_id = "a6221d3398c2e695ab8e1a2f1237bd1b"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+workers_dev = true
+
+# Serves the Vite build (apps/web/dist) as static assets, with SPA fallback.
+# run_worker_first = true forces the Worker to handle EVERY request first so our
+# /api/* and /auth/* routes are never shadowed by the SPA index.html fallback.
+[assets]
+directory = "../web/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = true
+
+# KV cache for { spotify_track_id -> mux_playback_id } and session state.
+[[kv_namespaces]]
+binding = "CACHE"
+id = "79f9392080ce47d7b761ab8ca2b0fa54"
+
+# Public-readable env vars (non-secret). Override per environment as needed.
+[vars]
+PUBLIC_APP_URL = "https://wlhnihtbltah.s-a62.workers.dev"
+# AI Gateway routing. Also requires CF_AIG_TOKEN set as a secret.
+AI_GATEWAY_ID = "default"
+CF_ACCOUNT_ID = "a6221d3398c2e695ab8e1a2f1237bd1b"
+
+# Secrets — set via:
+#   cd apps/worker
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put MUX_TOKEN_ID
+#   npx wrangler secret put MUX_TOKEN_SECRET
+#   npx wrangler secret put SPOTIFY_CLIENT_ID
+#   npx wrangler secret put SPOTIFY_CLIENT_SECRET
+#   npx wrangler secret put JAZZ_API_KEY
+#
+# For local dev, copy .env.example to apps/worker/.dev.vars

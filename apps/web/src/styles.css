@@ -1,0 +1,151 @@
+* { box-sizing: border-box; }
+html, body, #root { margin: 0; height: 100%; overflow: hidden; font-family: Tahoma, "MS Sans Serif", sans-serif; }
+
+/* ---------- Boot splash ---------- */
+.xp-boot { position: fixed; inset: 0; background: #000; color: white; display: grid; place-items: center; }
+.xp-boot-inner { text-align: center; }
+.xp-boot-logo { display: flex; align-items: center; gap: 18px; margin-bottom: 40px; justify-content: center; }
+.xp-boot-flag { display: grid; grid-template-columns: 1fr 1fr; grid-gap: 3px; width: 56px; height: 44px; transform: skew(-14deg); }
+.xp-boot-flag span { display: block; }
+.xp-boot-wordmark { text-align: left; }
+.xp-boot-title { font-size: 20px; letter-spacing: 1px; color: #ddd; }
+.xp-boot-title-big { font-size: 42px; font-weight: bold; letter-spacing: 1px; }
+.xp-boot-title-big span { color: #f7931e; margin-left: 6px; }
+.xp-boot-progress { width: 240px; height: 18px; margin: 0 auto; border: 1px solid #444; background: #000; position: relative; overflow: hidden; }
+.xp-boot-progress-fill { position: absolute; top: 0; left: -60px; width: 60px; height: 100%; background: linear-gradient(90deg, transparent, #4b8fe1, transparent); animation: xp-boot-slide 1.2s linear infinite; }
+@keyframes xp-boot-slide { to { left: 240px; } }
+.xp-boot-copy { margin-top: 28px; font-size: 11px; color: #888; }
+
+/* ---------- Login ---------- */
+.xp-login {
+  position: fixed; inset: 0;
+  background: linear-gradient(180deg, #5a7edc 0%, #2b5fb8 40%, #1a3f8a 100%);
+  color: white; display: flex; flex-direction: column;
+}
+.xp-login-top { padding: 28px 40px 20px; display: flex; align-items: center; gap: 16px; }
+.xp-login-brand-1 { font-size: 18px; opacity: 0.9; }
+.xp-login-brand-2 { font-size: 30px; font-weight: bold; }
+.xp-login-brand-2 span { color: #f7931e; margin-left: 6px; }
+.xp-login-divider { height: 3px; background: linear-gradient(90deg, #f7931e, #fff, #f7931e); margin: 0 40px; }
+.xp-login-main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; padding: 60px 80px; gap: 40px; }
+.xp-login-left h2 { font-weight: normal; }
+.xp-login-users { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; }
+.xp-user-tile {
+  display: flex; align-items: center; gap: 14px; padding: 10px 16px 10px 10px;
+  background: transparent; color: white; border: 0; cursor: pointer; border-radius: 4px;
+  transition: background 0.1s;
+}
+.xp-user-tile:hover { background: rgba(255,255,255,0.08); }
+.xp-user-tile img { width: 56px; height: 56px; border: 2px solid white; border-radius: 3px; background: #bcd; }
+.xp-user-tile-body { text-align: left; }
+.xp-user-name { font-size: 18px; font-weight: 600; }
+.xp-user-tile input { margin-top: 4px; padding: 4px 6px; font-size: 13px; width: 160px; }
+.xp-user-tile button { margin-top: 6px; }
+.xp-user-hint { font-size: 11px; opacity: 0.75; }
+.xp-login-bottom { padding: 16px 40px 40px; font-size: 12px; opacity: 0.85; }
+
+/* ---------- Desktop ---------- */
+.xp-desktop {
+  position: fixed; inset: 0;
+  background: #3a6ea5 url("/assets/bliss.jpg") center/cover no-repeat;
+  overflow: hidden;
+}
+.xp-desktop-icons {
+  position: absolute; top: 8px; left: 8px;
+  display: grid; grid-template-columns: 78px; gap: 10px;
+}
+.xp-desktop-icon {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: transparent; border: 0; color: white;
+  padding: 4px; cursor: pointer; font-size: 11px; text-shadow: 1px 1px 2px rgba(0,0,0,0.9);
+  width: 78px; word-break: break-word; text-align: center;
+}
+.xp-desktop-icon:focus, .xp-desktop-icon:hover { background: rgba(49, 106, 197, 0.35); border: 1px dotted rgba(255,255,255,0.8); padding: 3px; }
+.xp-desktop-icon img { width: 36px; height: 36px; }
+
+/* ---------- Taskbar ---------- */
+.xp-taskbar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 30px;
+  background: linear-gradient(180deg, #245edc 0%, #3f8cf3 8%, #245edc 20%, #245edc 80%, #0d3dac 100%);
+  display: flex; align-items: center; gap: 4px; color: white; font-size: 12px;
+  box-shadow: 0 -1px 0 #0a2a88 inset;
+  z-index: 9999;
+}
+.xp-start-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(180deg, #5eac56 0%, #3c8c36 20%, #3c8c36 90%, #1f661b 100%);
+  color: white; font-style: italic; font-weight: bold; font-size: 14px;
+  padding: 3px 16px 3px 8px; border: 0;
+  border-top-right-radius: 10px; border-bottom-right-radius: 10px;
+  cursor: pointer; height: 100%;
+}
+.xp-start-btn.pressed { background: linear-gradient(180deg, #3c8c36 0%, #2b6826 100%); }
+.xp-start-btn img { width: 18px; height: 18px; }
+
+.xp-tasks { flex: 1; display: flex; gap: 3px; overflow: hidden; padding: 2px 4px; }
+.xp-task-btn {
+  display: flex; align-items: center; gap: 6px;
+  max-width: 180px; padding: 4px 10px;
+  background: linear-gradient(180deg, #3f8cf3, #245edc); border: 0;
+  color: white; font-size: 12px; cursor: pointer;
+  border-radius: 3px;
+}
+.xp-task-btn.active { background: linear-gradient(180deg, #1b44a8, #245edc); box-shadow: inset 1px 1px 2px rgba(0,0,0,0.4); }
+.xp-task-btn img { width: 16px; height: 16px; }
+.xp-task-btn span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.xp-tray {
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(180deg, #1470e6, #0b51be);
+  padding: 0 10px 0 10px; height: 100%;
+  box-shadow: inset 1px 0 0 #0a3a8a;
+}
+.xp-tray img { width: 16px; height: 16px; }
+.xp-clock { font-size: 11px; }
+.xp-sync { font-size: 14px; line-height: 1; }
+.xp-sync[data-status="connected"] { color: #7cff6b; }
+.xp-sync[data-status="connecting"] { color: #ffc04d; }
+.xp-sync[data-status="disconnected"] { color: #ff6b6b; }
+
+/* ---------- Start menu ---------- */
+.xp-start-menu {
+  position: fixed; bottom: 30px; left: 0;
+  width: 380px; min-height: 440px;
+  background: #fff; color: #000; border: 1px solid #245edc; border-bottom: 0;
+  border-top-left-radius: 8px; border-top-right-radius: 8px;
+  display: flex; flex-direction: column;
+  box-shadow: 2px -2px 10px rgba(0,0,0,0.3);
+  z-index: 10000; font-size: 12px;
+}
+.xp-start-header {
+  display: flex; align-items: center; gap: 12px; padding: 10px;
+  background: linear-gradient(180deg, #245edc, #3f8cf3);
+  color: white; font-weight: bold; border-bottom: 3px solid #f5c842;
+  border-top-left-radius: 8px; border-top-right-radius: 8px;
+}
+.xp-start-header img { width: 44px; height: 44px; border: 2px solid white; background: #bcd; }
+.xp-start-body { flex: 1; padding: 8px; }
+.xp-start-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 6px 10px; border: 0; background: transparent; cursor: pointer;
+  font-size: 13px; text-align: left;
+}
+.xp-start-item:hover { background: #316ac5; color: white; }
+.xp-start-item img { width: 24px; height: 24px; }
+.xp-start-footer {
+  display: flex; justify-content: flex-end; gap: 12px;
+  background: linear-gradient(180deg, #d5e9fb, #b9d4f3);
+  padding: 10px; border-top: 1px solid #7fa7d6;
+}
+.xp-start-footer button {
+  display: flex; align-items: center; gap: 6px;
+  background: transparent; border: 0; cursor: pointer;
+}
+.xp-start-footer button img { width: 22px; height: 22px; }
+
+/* ---------- Make xp.css windows play nice with Rnd ---------- */
+.react-draggable .window { box-shadow: 2px 2px 0 rgba(0,0,0,0.2); }
+
+/* Keep xp.css's window frame but allow our app to claim the full body.
+   Apps are expected to set their own solid background. */
+.window > .window-body > * { flex: 1 1 auto; min-height: 0; align-self: stretch; }
