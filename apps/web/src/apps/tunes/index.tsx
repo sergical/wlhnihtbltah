@@ -106,6 +106,8 @@ export function TunesApp() {
   const [volume, setVolume] = useState(70);
   const [visualizerPlaybackId, setVisualizerPlaybackId] = useState<string | null>(null);
   const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
+  const [showEq, setShowEq] = useState(true);
+  const [showPl, setShowPl] = useState(true);
   const loadedOnce = useRef(false);
 
   // OAuth popup handler
@@ -272,7 +274,14 @@ export function TunesApp() {
 
   return (
     <div className="hs">
-      <HsMenuBar onDisconnect={disconnect} connected={!!tokens} />
+      <HsMenuBar
+        onDisconnect={disconnect}
+        connected={!!tokens}
+        showEq={showEq}
+        setShowEq={setShowEq}
+        showPl={showPl}
+        setShowPl={setShowPl}
+      />
 
       {rateLimitMsg && (
         <div className="hs-banner">⚠ Spotify API hiccup: {rateLimitMsg}</div>
@@ -280,8 +289,8 @@ export function TunesApp() {
 
       <div className="hs-body">
         {/* LEFT PANEL — equalizer */}
-        <div className="hs-panel hs-eq-panel">
-          <div className="hs-panel-close">×</div>
+        <div className={`hs-panel hs-eq-panel ${showEq ? "" : "hs-panel-hidden"}`}>
+          <div className="hs-panel-close" onClick={() => setShowEq(false)}>×</div>
           <div className="hs-eq-top">
             <div>
               <div className="hs-eq-label">Balance</div>
@@ -353,8 +362,8 @@ export function TunesApp() {
         />
 
         {/* RIGHT PANEL — playlist */}
-        <div className="hs-panel hs-pl-panel">
-          <div className="hs-panel-close hs-right-close">×</div>
+        <div className={`hs-panel hs-pl-panel ${showPl ? "" : "hs-panel-hidden"}`}>
+          <div className="hs-panel-close hs-right-close" onClick={() => setShowPl(false)}>×</div>
           <div className="hs-pl-header">
             <span className="hs-pl-disc">💿</span>
             <span className="hs-pl-title">
@@ -369,7 +378,7 @@ export function TunesApp() {
             <ul className="hs-pl-list">
               {playlists.length === 0 && <li className="hs-pl-loading">loading…</li>}
               {playlists.map((p) => (
-                <li key={p.id} onDoubleClick={() => setSelectedPlaylist(p)}>
+                <li key={p.id} onClick={() => setSelectedPlaylist(p)}>
                   <span className="hs-pl-name">{p.name}</span>
                   <span className="hs-pl-count">({p.tracks})</span>
                 </li>
@@ -386,11 +395,13 @@ export function TunesApp() {
               >
                 ← back to playlists
               </li>
+              {playlistTracks.length === 0 && <li className="hs-pl-loading">loading tracks…</li>}
               {playlistTracks.map((t) => (
                 <li
                   key={t.id}
                   className={currentTrack?.id === t.id ? "hs-pl-active" : ""}
-                  onDoubleClick={() => play(t.uri)}
+                  onClick={() => play(t.uri)}
+                  title="Click to play"
                 >
                   <span className="hs-pl-name">{t.name}</span>
                   <span className="hs-pl-count">{fmtDur(t.durationMs)}</span>
@@ -422,13 +433,41 @@ export function TunesApp() {
   );
 }
 
-function HsMenuBar({ connected, onDisconnect }: { connected: boolean; onDisconnect: () => void }) {
+function HsMenuBar({
+  connected,
+  onDisconnect,
+  showEq,
+  setShowEq,
+  showPl,
+  setShowPl,
+}: {
+  connected: boolean;
+  onDisconnect: () => void;
+  showEq: boolean;
+  setShowEq: (v: boolean) => void;
+  showPl: boolean;
+  setShowPl: (v: boolean) => void;
+}) {
   return (
     <div className="hs-menubar">
       <span>File</span>
       <span>View</span>
       <span>Play</span>
       <span>Tools</span>
+      <span
+        className="hs-menubar-toggle"
+        onClick={() => setShowEq(!showEq)}
+        title="Toggle equalizer"
+      >
+        EQ {showEq ? "▸" : "◂"}
+      </span>
+      <span
+        className="hs-menubar-toggle"
+        onClick={() => setShowPl(!showPl)}
+        title="Toggle playlist"
+      >
+        Playlist {showPl ? "◂" : "▸"}
+      </span>
       <div className="hs-menubar-spacer" />
       {connected && (
         <span className="hs-menubar-link" onClick={onDisconnect}>Sign out</span>
