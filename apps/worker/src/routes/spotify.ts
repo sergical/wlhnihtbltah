@@ -34,7 +34,9 @@ spotifyRoutes.get("/login", (c) => {
     redirect_uri: `${c.env.PUBLIC_APP_URL}/auth/spotify/callback`,
     scope: SCOPES,
     state,
-    show_dialog: "false",
+    // Force Spotify to re-prompt for consent so newly-added scopes take effect.
+    // Otherwise a returning user gets their old token with old scopes.
+    show_dialog: "true",
   });
 
   return c.redirect(`https://accounts.spotify.com/authorize?${params}`);
