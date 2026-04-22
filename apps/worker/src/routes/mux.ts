@@ -151,8 +151,9 @@ muxRoutes.post("/analyze/:assetId", async (c) => {
     callRobots(c.env, "find-key-moments", { asset_id: assetId }).catch(() => null),
   ]);
 
-  // Poll summarize until complete. Timeout scales with video length (Mux
-  // Robots is faster than realtime but not instant for long videos).
+  // Poll summarize until completed. Per Mux Robots docs:
+  //   GET /robots/v0/jobs/{workflow}/{JOB_ID}
+  //   status ∈ { pending, completed, errored }
   const timeoutMs = Math.min(300_000, Math.max(60_000, (asset.duration ?? 60) * 1000));
   let summaryResult: any = null;
   let summaryStatus: string = "pending";
@@ -160,16 +161,20 @@ muxRoutes.post("/analyze/:assetId", async (c) => {
   if (jobId) {
     const s = Date.now();
     while (Date.now() - s < timeoutMs) {
-      const res = await fetch(`https://api.mux.com/robots/v0/jobs/${jobId}`, {
-        headers: {
-          Authorization: `Basic ${btoa(`${c.env.MUX_TOKEN_ID}:${c.env.MUX_TOKEN_SECRET}`)}`,
+      const res = await fetch(
+        `https://api.mux.com/robots/v0/jobs/summarize/${jobId}`,
+        {
+          headers: {
+            Authorization: `Basic ${btoa(`${c.env.MUX_TOKEN_ID}:${c.env.MUX_TOKEN_SECRET}`)}`,
+          },
         },
-      });
+      );
       if (!res.ok) break;
       const job: any = await res.json();
       summaryStatus = job?.data?.status ?? summaryStatus;
-      if (summaryStatus === "complete") {
-        summaryResult = job?.data?.result ?? null;
+      if (summaryStatus === "completed") {
+        // Results live under `data.outputs`
+        summaryResult = job?.data?.outputs ?? null;
         break;
       }
       if (summaryStatus === "errored") break;

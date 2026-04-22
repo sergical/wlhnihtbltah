@@ -33,23 +33,33 @@ export function buildAgentTools(env: Env) {
     throw new Error("Mux asset timed out");
   }
 
-  /** Poll a Mux Robots job until it's complete or we hit the timeout. */
+  /** Poll a Mux Robots job until it's done.
+   *  Per docs: statuses are "pending" | "completed" | "errored".
+   *  Retrieve endpoint: GET /robots/v0/jobs/{workflow}/{JOB_ID} */
   async function pollJob(
     fetcher: typeof muxFetch,
+    workflow: string,
     jobId: string | undefined,
     timeoutMs: number,
   ): Promise<any> {
     if (!jobId) return null;
     const start = Date.now();
+    let lastJob: any = null;
     while (Date.now() - start < timeoutMs) {
-      const res = await fetcher(`/robots/v0/jobs/${jobId}`);
-      if (!res.ok) return null;
-      const job: any = await res.json();
-      const status = job?.data?.status;
-      if (status === "complete" || status === "errored") return job?.data;
+      try {
+        const res = await fetcher(`/robots/v0/jobs/${workflow}/${jobId}`);
+        if (res.ok) {
+          const job: any = await res.json();
+          lastJob = job?.data;
+          const status = job?.data?.status;
+          if (status === "completed" || status === "errored") {
+            return job?.data;
+          }
+        }
+      } catch {}
       await new Promise((r) => setTimeout(r, 2000));
     }
-    return null;
+    return lastJob;
   }
 
   return {
@@ -84,10 +94,29 @@ export function buildAgentTools(env: Env) {
 
           let ready: any;
           if (muxPlaybackMatch) {
-            const playbackId = muxPlaybackMatch[1]!;
-            const pb = await mux.video.playbackIds.retrieve(playbackId);
-            const assetId = (pb as any)?.object?.id;
-            if (!assetId) throw new Error("Mux playback id has no asset");
+            const id = muxPlaybackMatch[1]!;
+            // Try it as a playback id first; if that fails, assume it's an asset id.
+            let assetId: string | null = null;
+            try {
+              const pb = await mux.video.playbackIds.retrieve(id);
+              assetId = (pb as any)?.object?.id ?? null;
+            } catch {
+              assetId = null;
+            }
+            if (!assetId) {
+              // Fall back: treat input as an asset id directly.
+              try {
+                const asset = await mux.video.assets.retrieve(id);
+                if (asset?.id) assetId = asset.id;
+              } catch {
+                assetId = null;
+              }
+            }
+            if (!assetId) {
+              throw new Error(
+                `Couldn't find a Mux asset for that id. Tried both as playback id and asset id.`,
+              );
+            }
             ready = await waitForAsset(assetId);
           } else {
             // 1. Create Mux asset + auto-generate captions so Robots jobs that
@@ -124,19 +153,34 @@ export function buildAgentTools(env: Env) {
               : Promise.resolve(null),
           ]);
 
+          // Long videos take longer to summarize; scale timeout with duration
+          const timeoutMs = Math.min(
+            180_000,
+            Math.max(60_000, (ready.duration ?? 60) * 500),
+          );
           const summary = await pollJob(
             muxFetch,
+            "summarize",
             (summaryJob as any)?.data?.id,
-            45_000,
+            timeoutMs,
+          );
+          const keyMoments = await pollJob(
+            muxFetch,
+            "find-key-moments",
+            (keyMomentsJob as any)?.data?.id,
+            timeoutMs,
           );
 
+          // Mux Robots returns completed results in `data.outputs` (not `.result`).
           return {
             ok: true,
             muxAssetId: ready.id,
             muxPlaybackId: ready.playback_ids?.[0]?.id ?? null,
             durationSec: ready.duration,
-            summary: summary?.result ?? summary ?? null,
-            keyMoments: keyMomentsJob,
+            summary: summary?.outputs ?? null,
+            summaryStatus: summary?.status ?? "unknown",
+            keyMoments: keyMoments?.outputs ?? null,
+            keyMomentsStatus: keyMoments?.status ?? "unknown",
             questions: qnaJob,
           };
         } catch (err) {
