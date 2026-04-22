@@ -116,7 +116,6 @@ export function TunesApp() {
   const [rateLimitMsg, setRateLimitMsg] = useState<string | null>(null);
   const [showEq, setShowEq] = useState(true);
   const [showPl, setShowPl] = useState(true);
-  const loadedOnce = useRef(false);
 
   // OAuth popup handler
   useEffect(() => {
@@ -141,10 +140,9 @@ export function TunesApp() {
     setCurrentTrack(null);
   }
 
-  // Fetch profile + playlists once per token
+  // Fetch profile + playlists whenever we have a token (incl. after re-auth)
   useEffect(() => {
-    if (!tokens || loadedOnce.current) return;
-    loadedOnce.current = true;
+    if (!tokens) return;
     (async () => {
       try {
         const me = await spFetch("https://api.spotify.com/v1/me", tokens.accessToken, {
