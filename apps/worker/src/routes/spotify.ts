@@ -10,6 +10,8 @@ const SCOPES = [
   "user-modify-playback-state",
   "user-read-currently-playing",
   "playlist-read-private",
+  "playlist-read-collaborative",
+  "user-library-read",
 ].join(" ");
 
 export const spotifyRoutes = new Hono<AppContext>();

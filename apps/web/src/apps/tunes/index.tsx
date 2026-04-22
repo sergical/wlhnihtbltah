@@ -48,8 +48,15 @@ function saveTokens(t: SpotifyTokens) {
 }
 function clearTokens() {
   localStorage.removeItem(TOKEN_KEY);
-  sessionStorage.removeItem(PROFILE_CACHE_KEY);
-  sessionStorage.removeItem(PLAYLISTS_CACHE_KEY);
+  // Purge every cached Spotify API response (profile, playlists, per-playlist
+  // tracks) so the next sign-in starts clean with whatever scopes the new
+  // token has.
+  for (let i = sessionStorage.length - 1; i >= 0; i--) {
+    const key = sessionStorage.key(i);
+    if (key && (key === PROFILE_CACHE_KEY || key === PLAYLISTS_CACHE_KEY || key.startsWith("playlist-"))) {
+      sessionStorage.removeItem(key);
+    }
+  }
 }
 
 /**
@@ -100,6 +107,7 @@ export function TunesApp() {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [playlistTracks, setPlaylistTracks] = useState<Track[]>([]);
+  const [trackLoadError, setTrackLoadError] = useState<string | null>(null);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [position, setPosition] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -166,6 +174,8 @@ export function TunesApp() {
   // Fetch tracks when playlist selected
   useEffect(() => {
     if (!tokens || !selectedPlaylist) return;
+    setTrackLoadError(null);
+    setPlaylistTracks([]);
     (async () => {
       try {
         const d = await spFetch(
@@ -186,8 +196,21 @@ export function TunesApp() {
             uri: t.uri,
           }));
         setPlaylistTracks(tracks);
-      } catch (err) {
+        if (tracks.length === 0) {
+          setTrackLoadError("This playlist has no playable tracks");
+        }
+      } catch (err: any) {
         console.error("playlist load failed", err);
+        const msg = String(err);
+        if (msg.includes("403")) {
+          setTrackLoadError(
+            "Spotify forbids access to this playlist. Sign out + sign back in to refresh scopes.",
+          );
+        } else if (msg.includes("401")) {
+          setTrackLoadError("Session expired. Sign out + sign back in.");
+        } else {
+          setTrackLoadError(`Couldn't load tracks: ${msg}`);
+        }
       }
     })();
   }, [tokens, selectedPlaylist]);
@@ -395,7 +418,14 @@ export function TunesApp() {
               >
                 ← back to playlists
               </li>
-              {playlistTracks.length === 0 && <li className="hs-pl-loading">loading tracks…</li>}
+              {playlistTracks.length === 0 && !trackLoadError && (
+                <li className="hs-pl-loading">loading tracks…</li>
+              )}
+              {trackLoadError && (
+                <li className="hs-pl-loading" style={{ color: "#ffa5a5" }}>
+                  {trackLoadError}
+                </li>
+              )}
               {playlistTracks.map((t) => (
                 <li
                   key={t.id}
