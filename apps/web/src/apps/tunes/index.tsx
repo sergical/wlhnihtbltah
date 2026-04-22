@@ -26,6 +26,14 @@ type Playlist = {
   id: string;
   name: string;
   tracks: number;
+  kind?: "liked" | "playlist";
+};
+
+const LIKED_SONGS: Playlist = {
+  id: "__liked__",
+  name: "❤️ Liked Songs",
+  tracks: 0,
+  kind: "liked",
 };
 
 const TOKEN_KEY = "xp-tunes-spotify-tokens";
@@ -155,13 +163,15 @@ export function TunesApp() {
           tokens.accessToken,
           { cacheKey: PLAYLISTS_CACHE_KEY, cacheMs: 2 * 60_000 },
         );
-        setPlaylists(
-          (pls?.items ?? []).map((p: any) => ({
+        setPlaylists([
+          LIKED_SONGS,
+          ...(pls?.items ?? []).map((p: any) => ({
             id: p.id,
             name: p.name ?? "(untitled)",
             tracks: p.tracks?.total ?? 0,
+            kind: "playlist" as const,
           })),
-        );
+        ]);
       } catch (err) {
         console.error("spotify load failed", err);
         setRateLimitMsg(String(err));
@@ -176,11 +186,17 @@ export function TunesApp() {
     setPlaylistTracks([]);
     (async () => {
       try {
-        const d = await spFetch(
-          `https://api.spotify.com/v1/playlists/${selectedPlaylist.id}/tracks?limit=50&fields=items(track(id,name,duration_ms,album(name,images),artists(name),uri))`,
-          tokens.accessToken,
-          { cacheKey: `playlist-${selectedPlaylist.id}`, cacheMs: 60_000 },
-        );
+        // Two different endpoints: Liked Songs uses /v1/me/tracks, regular
+        // playlists use /v1/playlists/:id/tracks.
+        const url =
+          selectedPlaylist.kind === "liked"
+            ? `https://api.spotify.com/v1/me/tracks?limit=50`
+            : `https://api.spotify.com/v1/playlists/${selectedPlaylist.id}/tracks?limit=50&fields=items(track(id,name,duration_ms,album(name,images),artists(name),uri))`;
+        const cacheKey =
+          selectedPlaylist.kind === "liked"
+            ? "liked-tracks"
+            : `playlist-${selectedPlaylist.id}`;
+        const d = await spFetch(url, tokens.accessToken, { cacheKey, cacheMs: 60_000 });
         const tracks: Track[] = (d?.items ?? [])
           .map((i: any) => i.track)
           .filter(Boolean)
@@ -202,7 +218,7 @@ export function TunesApp() {
         const msg = String(err);
         if (msg.includes("403")) {
           setTrackLoadError(
-            "Spotify forbids access to this playlist. Sign out + sign back in to refresh scopes.",
+            "Spotify forbids access to this playlist — likely a Spotify-editorial playlist that can't be read by 3rd-party apps. Try a different one, or use ❤️ Liked Songs.",
           );
         } else if (msg.includes("401")) {
           setTrackLoadError("Session expired. Sign out + sign back in.");
