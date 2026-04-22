@@ -17,7 +17,7 @@ export function BootSplash({ onDone }: { onDone: () => void }) {
             <span style={{ background: "#f4c23e" }} />
           </div>
           <div className="xp-boot-wordmark">
-            <div className="xp-boot-title">Microsoft</div>
+            <div className="xp-boot-title">MicroSlop</div>
             <div className="xp-boot-title-big">Windows<span>XP</span></div>
           </div>
         </div>

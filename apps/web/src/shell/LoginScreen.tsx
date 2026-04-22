@@ -23,7 +23,7 @@ export function LoginScreen({ onLogin, existingUsers = [] }: Props) {
       <div className="xp-login-top">
         <img src="/assets/xp-logo-small.png" alt="" onError={(e) => (e.currentTarget.style.display = "none")} />
         <div>
-          <div className="xp-login-brand-1">Microsoft</div>
+          <div className="xp-login-brand-1">MicroSlop</div>
           <div className="xp-login-brand-2">Windows<span>XP</span></div>
         </div>
       </div>
